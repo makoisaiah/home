@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ログイン | MyApp</title>
+  <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body class="auth-page">
+  <div class="auth-card">
+    <a href="../index.html" class="logo">MyApp</a>
+    <h1>ログイン</h1>
+
+    <div id="error-msg" class="alert alert-error" style="display:none;"></div>
+
+    <div class="form-group">
+      <label for="email">メールアドレス</label>
+      <input type="email" id="email" placeholder="you@example.com" autocomplete="email" />
+    </div>
+    <div class="form-group">
+      <label for="password">パスワード</label>
+      <input type="password" id="password" placeholder="••••••••" autocomplete="current-password" />
+    </div>
+
+    <button id="login-btn" class="btn btn-primary btn-block">ログイン</button>
+
+    <p class="auth-alt">
+      アカウントをお持ちでない方は <a href="signup.html">新規登録</a>
+    </p>
+  </div>
+
+  <script src="../js/auth.js"></script>
+  <script>
+    document.getElementById('login-btn').addEventListener('click', async () => {
+      const email    = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const errEl    = document.getElementById('error-msg');
+      errEl.style.display = 'none';
+
+      try {
+        await signIn(email, password);          // auth.js が提供
+        window.location.href = 'dashboard.html';
+      } catch (e) {
+        errEl.textContent = e.message;
+        errEl.style.display = 'block';
+      }
+    });
+  </script>
+</body>
+</html>

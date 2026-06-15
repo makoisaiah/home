@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ダッシュボード | MyApp</title>
+  <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+  <!-- ログイン確認前は非表示にしてちらつきを防ぐ -->
+  <div id="page" style="display:none;">
+    <header class="site-header">
+      <a href="../index.html" class="logo">MyApp</a>
+      <nav>
+        <span id="user-email" class="user-email"></span>
+        <button id="logout-btn" class="btn btn-outline">ログアウト</button>
+      </nav>
+    </header>
+
+    <main class="container">
+      <h1>ダッシュボード</h1>
+      <p>会員専用コンテンツがここに入ります。</p>
+    </main>
+  </div>
+
+  <script src="../js/auth.js"></script>
+  <script>
+    // 未ログインならログインページへ
+    requireAuth().then(user => {
+      document.getElementById('user-email').textContent = user.email;
+      document.getElementById('page').style.display = '';
+    });
+
+    document.getElementById('logout-btn').addEventListener('click', async () => {
+      await signOut();
+      window.location.href = '../pages/login.html';
+    });
+  </script>
+</body>
+</html>

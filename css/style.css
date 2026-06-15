@@ -1,0 +1,143 @@
+/* ── リセット & ベース ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:        #ffffff;
+  --surface:   #f8f9fa;
+  --border:    #e2e8f0;
+  --text:      #1a202c;
+  --muted:     #718096;
+  --primary:   #4f46e5;
+  --primary-h: #4338ca;
+  --danger:    #e53e3e;
+  --radius:    8px;
+  --shadow:    0 1px 3px rgba(0,0,0,.08), 0 4px 12px rgba(0,0,0,.06);
+}
+
+body {
+  font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* ── ヘッダー ── */
+.site-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.5rem;
+  height: 60px;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  z-index: 100;
+}
+
+.logo {
+  font-weight: 700;
+  font-size: 1.2rem;
+  color: var(--primary);
+  text-decoration: none;
+}
+
+nav { display: flex; align-items: center; gap: .75rem; }
+.user-email { font-size: .875rem; color: var(--muted); }
+
+/* ── ボタン ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: .5rem 1.25rem;
+  border-radius: var(--radius);
+  font-size: .9rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  border: 2px solid transparent;
+  transition: background .15s, color .15s, border-color .15s;
+}
+.btn-primary {
+  background: var(--primary);
+  color: #fff;
+}
+.btn-primary:hover { background: var(--primary-h); }
+.btn-outline {
+  background: transparent;
+  color: var(--primary);
+  border-color: var(--primary);
+}
+.btn-outline:hover { background: var(--primary); color: #fff; }
+.btn-block { width: 100%; }
+.btn-lg { padding: .75rem 2rem; font-size: 1rem; }
+
+/* ── ヒーロー ── */
+.hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  min-height: calc(100vh - 60px);
+  text-align: center;
+  padding: 2rem;
+}
+.hero h1 { font-size: clamp(1.8rem, 5vw, 3rem); font-weight: 800; }
+.hero p  { color: var(--muted); font-size: 1.1rem; max-width: 480px; }
+
+/* ── 認証カード ── */
+.auth-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: var(--surface);
+  padding: 1rem;
+}
+
+.auth-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) * 1.5);
+  box-shadow: var(--shadow);
+  padding: 2.5rem 2rem;
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+.auth-card .logo { align-self: center; font-size: 1.4rem; }
+.auth-card h1 { font-size: 1.4rem; font-weight: 700; text-align: center; }
+
+/* ── フォーム ── */
+.form-group { display: flex; flex-direction: column; gap: .4rem; }
+.form-group label { font-size: .85rem; font-weight: 600; color: var(--muted); }
+.form-group input {
+  padding: .65rem .9rem;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  font-size: .95rem;
+  outline: none;
+  transition: border-color .15s;
+}
+.form-group input:focus { border-color: var(--primary); }
+
+/* ── アラート ── */
+.alert {
+  padding: .75rem 1rem;
+  border-radius: var(--radius);
+  font-size: .875rem;
+}
+.alert-error { background: #fff5f5; color: var(--danger); border: 1px solid #fed7d7; }
+
+/* ── 補助テキスト ── */
+.auth-alt { text-align: center; font-size: .875rem; color: var(--muted); }
+.auth-alt a { color: var(--primary); font-weight: 600; text-decoration: none; }
+
+/* ── ダッシュボード ── */
+.container { max-width: 900px; margin: 0 auto; padding: 2.5rem 1.5rem; }
+.container h1 { margin-bottom: 1rem; }
