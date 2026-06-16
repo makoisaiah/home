@@ -5,8 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>MyApp</title>
   <link rel="stylesheet" href="css/style.css" />
-  <style>
-  </style>
+  <style id="dynamic-vars"></style>
 </head>
 <body>
   <header class="site-header">
@@ -23,6 +22,12 @@
   <script src="js/renderer.js"></script>
   <script>
   async function init() {
+    // 前回のデザイン設定をキャッシュから即時適用
+    const cached = localStorage.getItem('designCache');
+    if (cached) {
+      document.getElementById('dynamic-vars').textContent = cached;
+    }
+    
     document.getElementById('page').style.display = 'none';
     const sb = await waitForClient();
 
@@ -33,13 +38,20 @@
       if (s.siteName) {
         document.title = s.siteName;
         document.getElementById('site-name').textContent = s.siteName;
+            }
+      const vars = `
+        :root {
+          ${s.primary  ? `--primary: ${s.primary};`  : ''}
+          ${s.bg       ? `--bg: ${s.bg};`            : ''}
+        }
+        body {
+          ${s.fontBody ? `font-family: ${s.fontBody};` : ''}
+          ${s.fontSize ? `font-size: ${s.fontSize};`   : ''}
+        }
+      `;
+      document.getElementById('dynamic-vars').textContent = vars;
+      localStorage.setItem('designCache', vars); 
       }
-      const root = document.documentElement;
-      if (s.primary)  root.style.setProperty('--primary', s.primary);
-      if (s.bg)       root.style.setProperty('--bg', s.bg);
-      if (s.fontBody) document.body.style.fontFamily = s.fontBody;
-      if (s.fontSize) document.body.style.fontSize   = s.fontSize;
-    }
 
     // ページブロックを取得して描画
     const { data: page } = await sb
