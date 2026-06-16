@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>管理画面 | MyApp</title>
+  <link rel="stylesheet" href="../css/style.css" />
+  <style>
+    .admin-layout {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      min-height: calc(100vh - 60px);
+    }
+    .admin-sidebar {
+      border-right: 1px solid var(--border);
+      padding: 1.5rem 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: .25rem;
+    }
+    .admin-sidebar h2 {
+      font-size: .75rem;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-bottom: .5rem;
+    }
+    .sidebar-btn {
+      background: none;
+      border: none;
+      text-align: left;
+      padding: .6rem .75rem;
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-size: .9rem;
+      color: var(--text);
+      width: 100%;
+      transition: background .15s;
+    }
+    .sidebar-btn:hover   { background: var(--surface); }
+    .sidebar-btn.active  { background: var(--primary); color: #fff; font-weight: 600; }
+
+    .admin-content { padding: 2rem; }
+    .admin-content h1 { font-size: 1.4rem; font-weight: 700; margin-bottom: 1.5rem; }
+
+    /* パネル */
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    .edit-group {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      margin-bottom: 1rem;
+    }
+    .edit-group label {
+      display: block;
+      font-size: .85rem;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: .5rem;
+    }
+    .edit-group input[type="text"],
+    .edit-group textarea {
+      width: 100%;
+      padding: .6rem .8rem;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      font-size: .95rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color .15s;
+      background: var(--bg);
+    }
+    .edit-group input[type="text"]:focus,
+    .edit-group textarea:focus { border-color: var(--primary); }
+    .edit-group textarea { min-height: 80px; resize: vertical; }
+
+    /* カラーピッカー */
+    .color-row {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+    }
+    .color-row input[type="color"] {
+      width: 44px;
+      height: 44px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      cursor: pointer;
+      padding: 2px;
+      background: var(--bg);
+    }
+    .color-row input[type="text"] {
+      width: 120px;
+      padding: .6rem .8rem;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      font-size: .9rem;
+      font-family: monospace;
+      outline: none;
+    }
+    .color-row input[type="text"]:focus { border-color: var(--primary); }
+
+    /* フォントセレクト */
+    .edit-group select {
+      width: 100%;
+      padding: .6rem .8rem;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      font-size: .95rem;
+      background: var(--bg);
+      outline: none;
+      cursor: pointer;
+    }
+
+    .save-bar {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      display: flex;
+      gap: .75rem;
+      align-items: center;
+    }
+    .toast {
+      background: #1a202c;
+      color: #fff;
+      padding: .6rem 1rem;
+      border-radius: var(--radius);
+      font-size: .875rem;
+      opacity: 0;
+      transition: opacity .3s;
+    }
+    .toast.show { opacity: 1; }
+
+    /* プレビュー */
+    .preview-box {
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      margin-top: 1rem;
+      background: var(--bg);
+    }
+    .preview-box h3 { font-size: .8rem; color: var(--muted); margin-bottom: .75rem; }
+  </style>
+</head>
+<body>
+<div id="page" style="display:none;">
+  <header class="site-header">
+    <a href="../index.html" class="logo">MyApp</a>
+    <nav>
+      <span style="font-size:.8rem;color:var(--muted);background:#fef3c7;padding:.25rem .6rem;border-radius:4px;font-weight:600;">管理者</span>
+      <span id="user-email" class="user-email"></span>
+      <button id="logout-btn" class="btn btn-outline">ログアウト</button>
+    </nav>
+  </header>
+
+  <div class="admin-layout">
+    <!-- サイドバー -->
+    <aside class="admin-sidebar">
+      <h2>管理メニュー</h2>
+      <button class="sidebar-btn active" data-panel="text">📝 テキスト編集</button>
+      <button class="sidebar-btn" data-panel="design">🎨 デザイン設定</button>
+    </aside>
+
+    <!-- メインコンテンツ -->
+    <main class="admin-content">
+
+      <!-- テキスト編集パネル -->
+      <div id="panel-text" class="panel active">
+        <h1>テキスト編集</h1>
+
+        <div class="edit-group">
+          <label>サイト名</label>
+          <input type="text" id="txt-site-name" placeholder="MyApp" />
+        </div>
+
+        <div class="edit-group">
+          <label>トップページ — キャッチコピー（h1）</label>
+          <input type="text" id="txt-hero-title" placeholder="ようこそ MyApp へ" />
+        </div>
+
+        <div class="edit-group">
+          <label>トップページ — サブテキスト</label>
+          <textarea id="txt-hero-sub" placeholder="ログインすると会員専用コンテンツにアクセスできます。"></textarea>
+        </div>
+
+        <div class="edit-group">
+          <label>CTAボタンのテキスト</label>
+          <input type="text" id="txt-cta" placeholder="無料で始める" />
+        </div>
+
+        <div class="preview-box">
+          <h3>プレビュー</h3>
+          <div style="text-align:center;padding:1rem;">
+            <p id="prev-title" style="font-size:1.5rem;font-weight:800;"></p>
+            <p id="prev-sub" style="color:var(--muted);margin:.5rem 0;"></p>
+            <span id="prev-cta" class="btn btn-primary btn-lg" style="display:inline-flex;"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- デザイン設定パネル -->
+      <div id="panel-design" class="panel">
+        <h1>デザイン設定</h1>
+
+        <div class="edit-group">
+          <label>メインカラー（ボタン・リンク）</label>
+          <div class="color-row">
+            <input type="color" id="color-primary" value="#4f46e5" />
+            <input type="text"  id="color-primary-hex" value="#4f46e5" maxlength="7" />
+          </div>
+        </div>
+
+        <div class="edit-group">
+          <label>背景色</label>
+          <div class="color-row">
+            <input type="color" id="color-bg" value="#ffffff" />
+            <input type="text"  id="color-bg-hex" value="#ffffff" maxlength="7" />
+          </div>
+        </div>
+
+        <div class="edit-group">
+          <label>本文フォント</label>
+          <select id="font-body">
+            <option value="'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif">デフォルト（ゴシック）</option>
+            <option value="'Georgia', 'Times New Roman', serif">明朝系（Georgia）</option>
+            <option value="'Courier New', monospace">等幅（Courier）</option>
+          </select>
+        </div>
+
+        <div class="edit-group">
+          <label>フォントサイズ基準</label>
+          <select id="font-size">
+            <option value="14px">小（14px）</option>
+            <option value="16px" selected>標準（16px）</option>
+            <option value="18px">大（18px）</option>
+          </select>
+        </div>
+
+        <div class="preview-box">
+          <h3>プレビュー</h3>
+          <div id="design-preview" style="padding:1rem;border-radius:6px;transition:all .3s;">
+            <p style="font-weight:700;margin-bottom:.4rem;">見出しサンプル</p>
+            <p>本文テキストのサンプルです。フォントや色の変化を確認できます。</p>
+            <button class="btn btn-primary" style="margin-top:.75rem;">ボタンサンプル</button>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- 保存バー -->
+  <div class="save-bar">
+    <span id="toast" class="toast">保存しました ✓</span>
+    <button id="save-btn" class="btn btn-primary">変更を保存</button>
+  </div>
+</div>
+
+<script src="../js/auth.js"></script>
+<script>
+// ── 認証チェック ──────────────────────────────────────────────────────────
+requireAdmin().then(user => {
+  document.getElementById('user-email').textContent = user.email;
+  document.getElementById('page').style.display = '';
+  loadSettings();
+});
+
+document.getElementById('logout-btn').addEventListener('click', async () => {
+  await signOut();
+  window.location.href = '../pages/login.html';
+});
+
+// ── サイドバー切り替え ────────────────────────────────────────────────────
+document.querySelectorAll('.sidebar-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.sidebar-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-' + btn.dataset.panel).classList.add('active');
+  });
+});
+
+// ── テキストプレビュー ────────────────────────────────────────────────────
+['txt-hero-title','txt-hero-sub','txt-cta'].forEach(id => {
+  document.getElementById(id).addEventListener('input', updateTextPreview);
+});
+function updateTextPreview() {
+  document.getElementById('prev-title').textContent = document.getElementById('txt-hero-title').value || 'キャッチコピー';
+  document.getElementById('prev-sub').textContent   = document.getElementById('txt-hero-sub').value  || 'サブテキスト';
+  document.getElementById('prev-cta').textContent   = document.getElementById('txt-cta').value       || 'CTAボタン';
+}
+
+// ── カラーピッカー同期 ────────────────────────────────────────────────────
+function syncColor(pickerId, hexId, cssVar) {
+  const picker = document.getElementById(pickerId);
+  const hex    = document.getElementById(hexId);
+  const preview = document.getElementById('design-preview');
+
+  picker.addEventListener('input', () => {
+    hex.value = picker.value;
+    preview.style.setProperty(cssVar, picker.value);
+  });
+  hex.addEventListener('input', () => {
+    if (/^#[0-9a-fA-F]{6}$/.test(hex.value)) {
+      picker.value = hex.value;
+      preview.style.setProperty(cssVar, hex.value);
+    }
+  });
+}
+syncColor('color-primary', 'color-primary-hex', '--primary');
+syncColor('color-bg',      'color-bg-hex',      'background');
+
+document.getElementById('font-body').addEventListener('change', e => {
+  document.getElementById('design-preview').style.fontFamily = e.target.value;
+});
+document.getElementById('font-size').addEventListener('change', e => {
+  document.getElementById('design-preview').style.fontSize = e.target.value;
+});
+
+// ── 設定の保存・読み込み（localStorage）─────────────────────────────────
+// ※ 将来的に Supabase の DB に移行可能
+function loadSettings() {
+  const s = JSON.parse(localStorage.getItem('siteSettings') || '{}');
+  if (s.siteName)   document.getElementById('txt-site-name').value  = s.siteName;
+  if (s.heroTitle)  document.getElementById('txt-hero-title').value = s.heroTitle;
+  if (s.heroSub)    document.getElementById('txt-hero-sub').value   = s.heroSub;
+  if (s.cta)        document.getElementById('txt-cta').value        = s.cta;
+  if (s.primary)  { document.getElementById('color-primary').value     = s.primary;
+                    document.getElementById('color-primary-hex').value  = s.primary; }
+  if (s.bg)       { document.getElementById('color-bg').value          = s.bg;
+                    document.getElementById('color-bg-hex').value       = s.bg; }
+  if (s.fontBody)   document.getElementById('font-body').value   = s.fontBody;
+  if (s.fontSize)   document.getElementById('font-size').value   = s.fontSize;
+  updateTextPreview();
+}
+
+document.getElementById('save-btn').addEventListener('click', () => {
+  const settings = {
+    siteName:  document.getElementById('txt-site-name').value,
+    heroTitle: document.getElementById('txt-hero-title').value,
+    heroSub:   document.getElementById('txt-hero-sub').value,
+    cta:       document.getElementById('txt-cta').value,
+    primary:   document.getElementById('color-primary').value,
+    bg:        document.getElementById('color-bg').value,
+    fontBody:  document.getElementById('font-body').value,
+    fontSize:  document.getElementById('font-size').value,
+  };
+  localStorage.setItem('siteSettings', JSON.stringify(settings));
+
+  const toast = document.getElementById('toast');
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2500);
+});
+</script>
+</body>
+</html>
