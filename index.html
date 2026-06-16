@@ -6,8 +6,6 @@
   <title>MyApp</title>
   <link rel="stylesheet" href="css/style.css" />
   <style>
-    /* ちらつき防止 */
-    #page { display: none; }
   </style>
 </head>
 <body>
@@ -25,6 +23,7 @@
   <script src="js/renderer.js"></script>
   <script>
   async function init() {
+    document.getElementById('page').style.display = 'none';
     const sb = await waitForClient();
 
     // デザイン設定を適用
