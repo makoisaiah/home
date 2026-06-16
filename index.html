@@ -22,5 +22,30 @@
   </main>
 
   <script src="js/auth.js"></script>
+  <script>
+  async function applySettings() {
+    const sb = await waitForClient();
+    const { data, error } = await sb.from('site_settings').select('key, value');
+    if (error || !data) return;
+
+    const s = Object.fromEntries(data.map(r => [r.key, r.value]));
+
+    if (s.siteName) {
+      document.title = s.siteName;
+      document.querySelector('.logo').textContent = s.siteName;
+    }
+    if (s.heroTitle) document.querySelector('.hero h1').textContent = s.heroTitle;
+    if (s.heroSub)   document.querySelector('.hero p').textContent  = s.heroSub;
+    if (s.cta)       document.querySelector('.hero .btn-lg').textContent = s.cta;
+
+    const root = document.documentElement;
+    if (s.primary) root.style.setProperty('--primary', s.primary);
+    if (s.bg)      root.style.setProperty('--bg', s.bg);
+    if (s.fontBody) document.body.style.fontFamily = s.fontBody;
+    if (s.fontSize) document.body.style.fontSize   = s.fontSize;
+  }
+
+  applySettings();
+  </script>
 </body>
 </html>
