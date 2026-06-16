@@ -321,24 +321,34 @@ document.getElementById('font-size').addEventListener('change', e => {
   document.getElementById('design-preview').style.fontSize = e.target.value;
 });
 
-// ── 設定の保存・読み込み（localStorage）─────────────────────────────────
-// ※ 将来的に Supabase の DB に移行可能
-function loadSettings() {
-  const s = JSON.parse(localStorage.getItem('siteSettings') || '{}');
+
+// ── 設定の保存・読み込み（Supabase）─────────────────────────────────────
+
+async function loadSettings() {
+  const sb = await waitForClient();
+  const { data, error } = await sb.from('site_settings').select('key, value');
+  if (error || !data) return;
+
+  const s = Object.fromEntries(data.map(r => [r.key, r.value]));
   if (s.siteName)   document.getElementById('txt-site-name').value  = s.siteName;
   if (s.heroTitle)  document.getElementById('txt-hero-title').value = s.heroTitle;
   if (s.heroSub)    document.getElementById('txt-hero-sub').value   = s.heroSub;
   if (s.cta)        document.getElementById('txt-cta').value        = s.cta;
-  if (s.primary)  { document.getElementById('color-primary').value     = s.primary;
-                    document.getElementById('color-primary-hex').value  = s.primary; }
-  if (s.bg)       { document.getElementById('color-bg').value          = s.bg;
-                    document.getElementById('color-bg-hex').value       = s.bg; }
-  if (s.fontBody)   document.getElementById('font-body').value   = s.fontBody;
-  if (s.fontSize)   document.getElementById('font-size').value   = s.fontSize;
+  if (s.primary)  { document.getElementById('color-primary').value    = s.primary;
+                    document.getElementById('color-primary-hex').value = s.primary; }
+  if (s.bg)       { document.getElementById('color-bg').value         = s.bg;
+                    document.getElementById('color-bg-hex').value      = s.bg; }
+  if (s.fontBody)   document.getElementById('font-body').value  = s.fontBody;
+  if (s.fontSize)   document.getElementById('font-size').value  = s.fontSize;
   updateTextPreview();
 }
 
-document.getElementById('save-btn').addEventListener('click', () => {
+document.getElementById('save-btn').addEventListener('click', async () => {
+  const sb = await waitForClient();
+  const saveBtn = document.getElementById('save-btn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = '保存中…';
+
   const settings = {
     siteName:  document.getElementById('txt-site-name').value,
     heroTitle: document.getElementById('txt-hero-title').value,
@@ -349,12 +359,30 @@ document.getElementById('save-btn').addEventListener('click', () => {
     fontBody:  document.getElementById('font-body').value,
     fontSize:  document.getElementById('font-size').value,
   };
-  localStorage.setItem('siteSettings', JSON.stringify(settings));
+
+  const rows = Object.entries(settings).map(([key, value]) => ({
+    key, value, updated_at: new Date().toISOString()
+  }));
+
+  const { error } = await sb
+    .from('site_settings')
+    .upsert(rows, { onConflict: 'key' });
+
+  saveBtn.disabled = false;
+  saveBtn.textContent = '変更を保存';
 
   const toast = document.getElementById('toast');
+  if (error) {
+    toast.textContent = '保存に失敗しました: ' + error.message;
+    toast.style.background = '#e53e3e';
+  } else {
+    toast.textContent = '保存しました ✓';
+    toast.style.background = '#1a202c';
+  }
   toast.classList.add('show');
   setTimeout(() => toast.classList.remove('show'), 2500);
 });
-</script>
+
+  </script>
 </body>
 </html>
