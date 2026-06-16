@@ -10,8 +10,8 @@
  */
 
 // ─── 設定（ここだけ書き換える） ───────────────────────────────────────────
-const SUPABASE_URL      = 'https://xxxxxxxxxxx.supabase.co';
-const SUPABASE_ANON_KEY = 'your-anon-key';
+const SUPABASE_URL      = 'https://gnnolqhffkqikrevlbji.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdubm9scWhmZmtxaWtyZXZsYmppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1MDIwOTAsImV4cCI6MjA5NzA3ODA5MH0.boNc971m_iZ9u67Px8vinwk5x3XDUa4tNflv8p-9NV0';
 // ─────────────────────────────────────────────────────────────────────────
 
 // Supabase JS v2 を CDN から読み込む
