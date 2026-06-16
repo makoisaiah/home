@@ -38,8 +38,8 @@
       errEl.style.display = 'none';
 
       try {
-        await signIn(email, password);          // auth.js が提供
-        window.location.href = 'dashboard.html';
+        await signIn(email, password);
+        await redirectByRole();               // ロールで振り分け
       } catch (e) {
         errEl.textContent = e.message;
         errEl.style.display = 'block';
