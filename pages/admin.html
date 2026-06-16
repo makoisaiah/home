@@ -172,6 +172,32 @@
     }
     .block-actions .btn-danger { color: var(--danger); border-color: var(--danger); }
     .block-fields { padding: 1rem; display: flex; flex-direction: column; gap: .5rem; }
+    .col-editor {
+      border: 1.5px dashed var(--border);
+      border-radius: var(--radius);
+      padding: .75rem;
+      min-height: 60px;
+    }
+    .col-editor-header {
+      font-size: .8rem;
+      font-weight: 700;
+      color: var(--muted);
+      margin-bottom: .5rem;
+    }
+    .col-block-item {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: .5rem .75rem;
+      margin-bottom: .5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: .875rem;
+    }
+    .col-block-item .block-actions { display: flex; gap: .25rem; }
+    .col-add-row { display: flex; gap: .4rem; flex-wrap: wrap; margin-top: .5rem; }
+    .col-add-row button { font-size: .75rem; padding: .25rem .5rem; }
   </style>
 </head>
 <body>
@@ -442,6 +468,7 @@ const BLOCK_TYPES = {
   image:   '🖼 画像',
   button:  '🔘 ボタン',
   'two-col': '⬛⬛ 2カラム',
+  'three-col':'⬛⬛⬛ 3カラム',
 };
 
 async function loadPageEditor() {
@@ -473,52 +500,106 @@ function renderEditor() {
   `).join('');
 }
 
-function renderFields(b, i) {
+function renderFields(b, i, colParent, colKey, colIndex) {
+  const onInput = (key) => colParent !== undefined
+    ? `updateColBlock(${colParent},'${colKey}',${colIndex},'${key}',this.value)`
+    : `updateBlock(${i},'${key}',this.value)`;
+
   const field = (label, key, type='text', extra='') =>
     `<div class="edit-group">
        <label>${label}</label>
        <input type="${type}" value="${esc2(b[key])}"
-              oninput="updateBlock(${i},'${key}',this.value)" ${extra}/>
+              oninput="${onInput(key)}" ${extra}/>
      </div>`;
   const textarea = (label, key) =>
     `<div class="edit-group">
        <label>${label}</label>
-       <textarea oninput="updateBlock(${i},'${key}',this.value)">${esc2(b[key])}</textarea>
+       <textarea oninput="${onInput(key)}">${esc2(b[key])}</textarea>
      </div>`;
 
   switch (b.type) {
     case 'hero':
       return field('見出し','title') + field('サブテキスト','sub')
            + field('ボタンテキスト','cta') + field('ボタンURL','ctaUrl');
+
     case 'text':
       return field('見出し（省略可）','heading') + textarea('本文','body');
-    case 'image':
+
+    case 'image': {
+      const uploadHandler = colParent !== undefined
+        ? `uploadImageToCol(event,${colParent},'${colKey}',${colIndex})`
+        : `uploadImage(event,${i})`;
       return `<div class="edit-group"><label>画像</label>
-                <input type="file" accept="image/*" onchange="uploadImage(event,${i})"/>
+                <input type="file" accept="image/*" onchange="${uploadHandler}"/>
               </div>`
            + field('ALTテキスト','alt')
            + field('キャプション（省略可）','caption')
            + `<div class="edit-group"><label>配置</label>
-                <select onchange="updateBlock(${i},'align',this.value)">
+                <select onchange="${onInput('align')}">
                   <option value="center" ${b.align==='center'?'selected':''}>中央</option>
                   <option value="left"   ${b.align==='left'  ?'selected':''}>左</option>
                   <option value="right"  ${b.align==='right' ?'selected':''}>右</option>
                 </select></div>`;
+    }
+
     case 'button':
       return field('ボタンテキスト','label') + field('URL','url')
            + `<div class="edit-group"><label>スタイル</label>
-                <select onchange="updateBlock(${i},'style',this.value)">
+                <select onchange="${onInput('style')}">
                   <option value="primary" ${b.style==='primary'?'selected':''}>塗りつぶし</option>
                   <option value="outline" ${b.style==='outline'?'selected':''}>枠線</option>
                 </select></div>`;
+
     case 'two-col':
-      return `<p style="color:var(--muted);font-size:.875rem;">
-                2カラムの中身は保存後に個別編集できます（今後対応予定）
-              </p>`;
+    case 'three-col': {
+      const cols   = b.type === 'three-col' ? 3 : 2;
+      const labels = ['左', '中', '右'];
+      const keys   = ['left', 'center', 'right'].slice(0, cols);
+
+      const switchBtn = b.type === 'two-col'
+        ? `<button class="btn btn-outline" style="font-size:.8rem;padding:.25rem .6rem;"
+                   onclick="switchColType(${i},'three-col')">3カラムに変更</button>`
+        : `<button class="btn btn-outline" style="font-size:.8rem;padding:.25rem .6rem;"
+                   onclick="switchColType(${i},'two-col')">2カラムに変更</button>`;
+
+      const colsHtml = keys.map((key, ci) => `
+        <div>
+          <div class="col-editor-header">${labels[ci]}カラム</div>
+          <div class="col-editor" id="col-${i}-${key}">
+            ${(b[key] ?? []).map((cb, cbi) => `
+              <div class="col-block-item">
+                <span>${BLOCK_TYPES[cb.type] ?? cb.type}</span>
+                <div class="block-actions">
+                  <button onclick="moveColBlock(${i},'${key}',${cbi},-1)" ${cbi===0?'disabled':''}>↑</button>
+                  <button onclick="moveColBlock(${i},'${key}',${cbi}, 1)" ${cbi===(b[key].length-1)?'disabled':''}>↓</button>
+                  <button onclick="removeColBlock(${i},'${key}',${cbi})" class="btn-danger">削除</button>
+                </div>
+              </div>
+              <div class="block-fields" style="padding:.5rem;background:var(--surface);border-radius:var(--radius);margin-bottom:.5rem;">
+                ${renderFields(cb, -1, i, key, cbi)}
+              </div>
+            `).join('')}
+            <div class="col-add-row">
+              ${Object.keys(BLOCK_TYPES).filter(t=>t!=='two-col'&&t!=='three-col').map(t =>
+                `<button class="btn btn-outline" onclick="addColBlock(${i},'${key}','${t}')">${BLOCK_TYPES[t]}</button>`
+              ).join('')}
+            </div>
+          </div>
+        </div>
+      `).join('');
+
+      const gridCols = cols === 3 ? '1fr 1fr 1fr' : '1fr 1fr';
+      return `
+        <div style="margin-bottom:.75rem;">${switchBtn}</div>
+        <div style="display:grid;grid-template-columns:${gridCols};gap:1rem;">
+          ${colsHtml}
+        </div>`;
+    }
+
     default: return '';
   }
 }
-
+  
 function esc2(str = '') {
   return String(str).replace(/"/g,'&quot;').replace(/</g,'&lt;');
 }
@@ -590,6 +671,59 @@ async function savePage() {
   const toast = document.getElementById('toast');
   toast.textContent  = error ? '保存失敗: '+error.message : 'ページを保存しました ✓';
   toast.style.background = error ? '#e53e3e' : '#1a202c';
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2500);
+}
+
+function switchColType(i, newType) {
+  blocks[i].type = newType;
+  if (newType === 'three-col' && !blocks[i].center) blocks[i].center = [];
+  renderEditor();
+}
+
+function addColBlock(i, key, type) {
+  const defaults = {
+    hero:   { type:'hero',   title:'', sub:'', cta:'', ctaUrl:'' },
+    text:   { type:'text',   heading:'', body:'' },
+    image:  { type:'image',  url:'', alt:'', caption:'', align:'center' },
+    button: { type:'button', label:'', url:'', style:'primary' },
+  };
+  if (!blocks[i][key]) blocks[i][key] = [];
+  blocks[i][key].push(defaults[type]);
+  renderEditor();
+}
+
+function removeColBlock(i, key, ci) {
+  if (!confirm('削除しますか？')) return;
+  blocks[i][key].splice(ci, 1);
+  renderEditor();
+}
+
+function moveColBlock(i, key, ci, dir) {
+  const arr = blocks[i][key];
+  const j   = ci + dir;
+  if (j < 0 || j >= arr.length) return;
+  [arr[ci], arr[j]] = [arr[j], arr[ci]];
+  renderEditor();
+}
+
+function updateColBlock(i, key, ci, field, value) {
+  blocks[i][key][ci][field] = value;
+}
+
+async function uploadImageToCol(event, i, key, ci) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const sb   = await waitForClient();
+  const path = `public/${Date.now()}_${file.name}`;
+  const { error } = await sb.storage.from('images').upload(path, file);
+  if (error) { alert('アップロード失敗: ' + error.message); return; }
+  const { data } = sb.storage.from('images').getPublicUrl(path);
+  updateColBlock(i, key, ci, 'url', data.publicUrl);
+
+  const toast = document.getElementById('toast');
+  toast.textContent = 'アップロード完了 ✓';
+  toast.style.background = '#1a202c';
   toast.classList.add('show');
   setTimeout(() => toast.classList.remove('show'), 2500);
 }
