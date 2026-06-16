@@ -144,6 +144,34 @@
       background: var(--bg);
     }
     .preview-box h3 { font-size: .8rem; color: var(--muted); margin-bottom: .75rem; }
+
+    .block-item {
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 1rem;
+      background: var(--bg);
+      overflow: hidden;
+    }
+    .block-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: .6rem 1rem;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+    }
+    .block-label { font-weight: 700; font-size: .9rem; }
+    .block-actions { display: flex; gap: .4rem; }
+    .block-actions button {
+      padding: .25rem .6rem;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: var(--bg);
+      cursor: pointer;
+      font-size: .8rem;
+    }
+    .block-actions .btn-danger { color: var(--danger); border-color: var(--danger); }
+    .block-fields { padding: 1rem; display: flex; flex-direction: column; gap: .5rem; }
   </style>
 </head>
 <body>
@@ -267,6 +295,7 @@ requireAdmin().then(user => {
   document.getElementById('user-email').textContent = user.email;
   document.getElementById('page').style.display = '';
   loadSettings();
+  loadPageEditor(); 
 });
 
 document.getElementById('logout-btn').addEventListener('click', async () => {
@@ -383,6 +412,159 @@ document.getElementById('save-btn').addEventListener('click', async () => {
   setTimeout(() => toast.classList.remove('show'), 2500);
 });
 
+// ── ページエディタ ────────────────────────────────────────────────────────
+
+let blocks = [];   // 現在編集中のブロック配列
+
+const BLOCK_TYPES = {
+  hero:    '🦸 ヒーロー',
+  text:    '📝 テキスト',
+  image:   '🖼 画像',
+  button:  '🔘 ボタン',
+  'two-col': '⬛⬛ 2カラム',
+};
+
+async function loadPageEditor() {
+  const sb = await waitForClient();
+  const { data } = await sb.from('pages').select('blocks').eq('id','index').single();
+  blocks = data?.blocks ?? [
+    { type:'hero', title:'ようこそ MyApp へ',
+      sub:'ログインすると会員専用コンテンツにアクセスできます。',
+      cta:'無料で始める', ctaUrl:'pages/signup.html' }
+  ];
+  renderEditor();
+}
+
+function renderEditor() {
+  const container = document.getElementById('block-list');
+  if (!container) return;
+  container.innerHTML = blocks.map((b, i) => `
+    <div class="block-item" data-index="${i}">
+      <div class="block-header">
+        <span class="block-label">${BLOCK_TYPES[b.type] ?? b.type}</span>
+        <div class="block-actions">
+          <button onclick="moveBlock(${i},-1)" ${i===0?'disabled':''}>↑</button>
+          <button onclick="moveBlock(${i}, 1)" ${i===blocks.length-1?'disabled':''}>↓</button>
+          <button onclick="removeBlock(${i})" class="btn-danger">削除</button>
+        </div>
+      </div>
+      <div class="block-fields">${renderFields(b, i)}</div>
+    </div>
+  `).join('');
+}
+
+function renderFields(b, i) {
+  const field = (label, key, type='text', extra='') =>
+    `<div class="edit-group">
+       <label>${label}</label>
+       <input type="${type}" value="${esc2(b[key])}"
+              oninput="updateBlock(${i},'${key}',this.value)" ${extra}/>
+     </div>`;
+  const textarea = (label, key) =>
+    `<div class="edit-group">
+       <label>${label}</label>
+       <textarea oninput="updateBlock(${i},'${key}',this.value)">${esc2(b[key])}</textarea>
+     </div>`;
+
+  switch (b.type) {
+    case 'hero':
+      return field('見出し','title') + field('サブテキスト','sub')
+           + field('ボタンテキスト','cta') + field('ボタンURL','ctaUrl');
+    case 'text':
+      return field('見出し（省略可）','heading') + textarea('本文','body');
+    case 'image':
+      return `<div class="edit-group"><label>画像</label>
+                <input type="file" accept="image/*" onchange="uploadImage(event,${i})"/>
+              </div>`
+           + field('ALTテキスト','alt')
+           + field('キャプション（省略可）','caption')
+           + `<div class="edit-group"><label>配置</label>
+                <select onchange="updateBlock(${i},'align',this.value)">
+                  <option value="center" ${b.align==='center'?'selected':''}>中央</option>
+                  <option value="left"   ${b.align==='left'  ?'selected':''}>左</option>
+                  <option value="right"  ${b.align==='right' ?'selected':''}>右</option>
+                </select></div>`;
+    case 'button':
+      return field('ボタンテキスト','label') + field('URL','url')
+           + `<div class="edit-group"><label>スタイル</label>
+                <select onchange="updateBlock(${i},'style',this.value)">
+                  <option value="primary" ${b.style==='primary'?'selected':''}>塗りつぶし</option>
+                  <option value="outline" ${b.style==='outline'?'selected':''}>枠線</option>
+                </select></div>`;
+    case 'two-col':
+      return `<p style="color:var(--muted);font-size:.875rem;">
+                2カラムの中身は保存後に個別編集できます（今後対応予定）
+              </p>`;
+    default: return '';
+  }
+}
+
+function esc2(str = '') {
+  return String(str).replace(/"/g,'&quot;').replace(/</g,'&lt;');
+}
+
+function updateBlock(i, key, value) {
+  blocks[i][key] = value;
+}
+
+function moveBlock(i, dir) {
+  const j = i + dir;
+  if (j < 0 || j >= blocks.length) return;
+  [blocks[i], blocks[j]] = [blocks[j], blocks[i]];
+  renderEditor();
+}
+
+function removeBlock(i) {
+  if (!confirm('このブロックを削除しますか？')) return;
+  blocks.splice(i, 1);
+  renderEditor();
+}
+
+function addBlock(type) {
+  const defaults = {
+    hero:    { type:'hero', title:'', sub:'', cta:'', ctaUrl:'' },
+    text:    { type:'text', heading:'', body:'' },
+    image:   { type:'image', url:'', alt:'', caption:'', align:'center' },
+    button:  { type:'button', label:'', url:'', style:'primary' },
+    'two-col': { type:'two-col', left:[], right:[] },
+  };
+  blocks.push(defaults[type]);
+  renderEditor();
+}
+
+async function uploadImage(event, i) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const sb   = await waitForClient();
+  const path = `public/${Date.now()}_${file.name}`;
+  const { error } = await sb.storage.from('images').upload(path, file);
+  if (error) { alert('アップロード失敗: ' + error.message); return; }
+  const { data } = sb.storage.from('images').getPublicUrl(path);
+  updateBlock(i, 'url', data.publicUrl);
+  renderEditor();
+}
+
+async function savePage() {
+  const sb  = await waitForClient();
+  const btn = document.getElementById('save-page-btn');
+  btn.disabled = true;
+  btn.textContent = '保存中…';
+
+  const { error } = await sb.from('pages').upsert(
+    { id:'index', blocks, updated_at: new Date().toISOString() },
+    { onConflict:'id' }
+  );
+
+  btn.disabled = false;
+  btn.textContent = 'ページを保存';
+
+  const toast = document.getElementById('toast');
+  toast.textContent  = error ? '保存失敗: '+error.message : 'ページを保存しました ✓';
+  toast.style.background = error ? '#e53e3e' : '#1a202c';
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2500);
+}
+  
   </script>
 </body>
 </html>
