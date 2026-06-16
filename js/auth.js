@@ -62,11 +62,54 @@ async function requireAuth() {
   const sb = await waitForClient();
   const { data: { user } } = await sb.auth.getUser();
   if (!user) {
-    // pages/ 配下から呼ばれる前提のパス
     window.location.href = '../pages/login.html';
-    return new Promise(() => {}); // リダイレクト待ち
+    return new Promise(() => {});
   }
   return user;
+}
+
+/**
+ * ログイン済みユーザーのロール（'admin' | 'member'）を返す。
+ */
+async function getUserRole() {
+  const sb   = await waitForClient();
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user) return null;
+
+  const { data, error } = await sb
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single();
+
+  if (error) return 'member';
+  return data.role;
+}
+
+/**
+ * 管理者専用ページ用。admin 以外はダッシュボードへリダイレクト。
+ */
+async function requireAdmin() {
+  const user = await requireAuth();
+  const role = await getUserRole();
+  if (role !== 'admin') {
+    window.location.href = '../pages/dashboard.html';
+    return new Promise(() => {});
+  }
+  return user;
+}
+
+/**
+ * ログイン後のリダイレクト先をロールで振り分ける。
+ * login.html / signup.html から呼ぶ。
+ */
+async function redirectByRole() {
+  const role = await getUserRole();
+  if (role === 'admin') {
+    window.location.href = '../pages/admin.html';
+  } else {
+    window.location.href = '../pages/dashboard.html';
+  }
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
