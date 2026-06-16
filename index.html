@@ -5,47 +5,64 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>MyApp</title>
   <link rel="stylesheet" href="css/style.css" />
+  <style>
+    /* ちらつき防止 */
+    #page { display: none; }
+  </style>
 </head>
 <body>
   <header class="site-header">
-    <a href="/" class="logo">MyApp</a>
+    <a href="/" class="logo" id="site-name">MyApp</a>
     <nav>
       <a href="pages/login.html" class="btn btn-outline">ログイン</a>
       <a href="pages/signup.html" class="btn btn-primary">新規登録</a>
     </nav>
   </header>
 
-  <main class="hero">
-    <h1>ようこそ MyApp へ</h1>
-    <p>ログインすると会員専用コンテンツにアクセスできます。</p>
-    <a href="pages/signup.html" class="btn btn-primary btn-lg">無料で始める</a>
-  </main>
+  <div id="page"></div>
 
   <script src="js/auth.js"></script>
+  <script src="js/renderer.js"></script>
   <script>
-  async function applySettings() {
+  async function init() {
     const sb = await waitForClient();
-    const { data, error } = await sb.from('site_settings').select('key, value');
-    if (error || !data) return;
 
-    const s = Object.fromEntries(data.map(r => [r.key, r.value]));
-
-    if (s.siteName) {
-      document.title = s.siteName;
-      document.querySelector('.logo').textContent = s.siteName;
+    // デザイン設定を適用
+    const { data: settings } = await sb.from('site_settings').select('key, value');
+    if (settings) {
+      const s = Object.fromEntries(settings.map(r => [r.key, r.value]));
+      if (s.siteName) {
+        document.title = s.siteName;
+        document.getElementById('site-name').textContent = s.siteName;
+      }
+      const root = document.documentElement;
+      if (s.primary)  root.style.setProperty('--primary', s.primary);
+      if (s.bg)       root.style.setProperty('--bg', s.bg);
+      if (s.fontBody) document.body.style.fontFamily = s.fontBody;
+      if (s.fontSize) document.body.style.fontSize   = s.fontSize;
     }
-    if (s.heroTitle) document.querySelector('.hero h1').textContent = s.heroTitle;
-    if (s.heroSub)   document.querySelector('.hero p').textContent  = s.heroSub;
-    if (s.cta)       document.querySelector('.hero .btn-lg').textContent = s.cta;
 
-    const root = document.documentElement;
-    if (s.primary) root.style.setProperty('--primary', s.primary);
-    if (s.bg)      root.style.setProperty('--bg', s.bg);
-    if (s.fontBody) document.body.style.fontFamily = s.fontBody;
-    if (s.fontSize) document.body.style.fontSize   = s.fontSize;
+    // ページブロックを取得して描画
+    const { data: page } = await sb
+      .from('pages')
+      .select('blocks')
+      .eq('id', 'index')
+      .single();
+
+    const blocks = page?.blocks ?? defaultBlocks();
+    document.getElementById('page').innerHTML = renderBlocks(blocks);
+    document.getElementById('page').style.display = '';
   }
 
-  applySettings();
+  function defaultBlocks() {
+    return [
+      { type: 'hero', title: 'ようこそ MyApp へ',
+        sub: 'ログインすると会員専用コンテンツにアクセスできます。',
+        cta: '無料で始める', ctaUrl: 'pages/signup.html' }
+    ];
+  }
+
+  init();
   </script>
 </body>
 </html>
