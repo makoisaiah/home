@@ -561,7 +561,16 @@ async function uploadImage(event, i) {
   if (error) { alert('アップロード失敗: ' + error.message); return; }
   const { data } = sb.storage.from('images').getPublicUrl(path);
   updateBlock(i, 'url', data.publicUrl);
-  renderEditor();
+
+  // 再描画せず URL フィールドだけ更新
+  const urlInput = document.querySelector(`[data-index="${i}"] input[type="text"]`);
+  if (urlInput) urlInput.value = data.publicUrl;
+
+  const toast = document.getElementById('toast');
+  toast.textContent = 'アップロード完了 ✓';
+  toast.style.background = '#1a202c';
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2500);
 }
 
 async function savePage() {
