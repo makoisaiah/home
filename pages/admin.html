@@ -191,6 +191,7 @@
       <h2>管理メニュー</h2>
       <button class="sidebar-btn active" data-panel="text">📝 テキスト編集</button>
       <button class="sidebar-btn" data-panel="design">🎨 デザイン設定</button>
+      <button class="sidebar-btn" data-panel="page">🗂 ページ編集</button>
     </aside>
 
     <!-- メインコンテンツ -->
@@ -276,6 +277,25 @@
             <button class="btn btn-primary" style="margin-top:.75rem;">ボタンサンプル</button>
           </div>
         </div>
+      </div>
+
+      <!-- ページ編集パネル -->
+      <div id="panel-page" class="panel">
+        <h1>ページ編集 — トップページ</h1>
+      
+        <div class="edit-group" style="display:flex;gap:.5rem;flex-wrap:wrap;">
+          <span style="font-size:.85rem;font-weight:600;color:var(--muted);width:100%;">ブロックを追加</span>
+          <button onclick="addBlock('hero')"    class="btn btn-outline">🦸 ヒーロー</button>
+          <button onclick="addBlock('text')"    class="btn btn-outline">📝 テキスト</button>
+          <button onclick="addBlock('image')"   class="btn btn-outline">🖼 画像</button>
+          <button onclick="addBlock('button')"  class="btn btn-outline">🔘 ボタン</button>
+          <button onclick="addBlock('two-col')" class="btn btn-outline">⬛⬛ 2カラム</button>
+        </div>
+      
+        <div id="block-list"></div>
+      
+        <button id="save-page-btn" onclick="savePage()" class="btn btn-primary btn-block"
+                style="margin-top:1rem;">ページを保存</button>
       </div>
 
     </main>
