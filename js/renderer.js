@@ -61,6 +61,26 @@ function renderBlock(block) {
         </section>`;
     }
 
+    case 'file': {
+      const icon = '📄';
+      return `
+        <section class="container" style="text-align:${block.align||'left'}">
+          <div style="display:inline-flex;align-items:center;gap:.75rem;
+                      border:1.5px solid var(--border);border-radius:var(--radius);
+                      padding:.75rem 1.25rem;background:var(--surface);">
+            <span style="font-size:1.5rem;">${icon}</span>
+            <div>
+              <div style="font-weight:600;">${esc(block.label)}</div>
+              <div style="font-size:.8rem;color:var(--muted);">${esc(block.desc ?? '')}</div>
+            </div>
+            <button onclick="downloadFile('${escUrl(block.path)}','${esc(block.minRole??'free')}')"
+                    class="btn btn-primary" style="margin-left:.5rem;">
+              ダウンロード
+            </button>
+          </div>
+        </section>`;
+    }
+
     default:
       return '';
   }
@@ -74,4 +94,19 @@ function esc(str = '') {
 
 function escUrl(str = '') {
   return String(str).replace(/"/g, '&quot;');
+}
+
+async function downloadFile(path, minRole) {
+  const userRole = await getCurrentRole();
+  if (roleLevel(userRole) < roleLevel(minRole)) {
+    window.location.href = 'pages/upgrade.html';
+    return;
+  }
+  const sb = await waitForClient();
+  const { data, error } = await sb.storage.from('files').createSignedUrl(path, 60);
+  if (error) { alert('ダウンロードに失敗しました'); return; }
+  const a = document.createElement('a');
+  a.href = data.signedUrl;
+  a.download = path.split('/').pop();
+  a.click();
 }
