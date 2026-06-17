@@ -12,7 +12,7 @@ function renderBlock(block) {
         <section class="hero">
           <h1>${esc(block.title)}</h1>
           <p>${esc(block.sub)}</p>
-          <a href="${esc(block.ctaUrl)}" class="btn btn-primary btn-lg">${esc(block.cta)}</a>
+          <a href="${escUrl(block.ctaUrl)}" class="btn btn-primary btn-lg">${esc(block.cta)}</a>
         </section>`;
 
     case 'text':
@@ -30,7 +30,7 @@ function renderBlock(block) {
         ${block.caption ? `<p style="color:var(--muted);font-size:.875rem;margin-top:.5rem;">${esc(block.caption)}</p>` : ''}`;
     
       const inner = block.link
-        ? `<a href="${esc(block.link)}" class="img-link">${img}</a>`
+        ? `<a href="${escUrl(block.link)}" class="img-link">${img}</a>`
         : img;
     
       return `
@@ -42,7 +42,7 @@ function renderBlock(block) {
     case 'button':
       return `
         <section class="container" style="text-align:${block.align||'center'}">
-          <a href="${esc(block.url)}" class="btn ${block.style==='outline'?'btn-outline':'btn-primary'} btn-lg">
+          <a href="${escUrl(block.url)}" class="btn ${block.style==='outline'?'btn-outline':'btn-primary'} btn-lg">
             ${esc(block.label)}
           </a>
         </section>`;
@@ -70,4 +70,8 @@ function esc(str = '') {
   return String(str)
     .replace(/&/g,'&amp;').replace(/</g,'&lt;')
     .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function escUrl(str = '') {
+  return String(str).replace(/"/g, '&quot;');
 }
