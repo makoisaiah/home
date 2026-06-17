@@ -215,47 +215,32 @@
     <!-- サイドバー -->
     <aside class="admin-sidebar">
       <h2>管理メニュー</h2>
-      <button class="sidebar-btn active" data-panel="text">📝 テキスト編集</button>
+      <button class="sidebar-btn active" data-panel="page">🗂 ページ編集</button>
       <button class="sidebar-btn" data-panel="design">🎨 デザイン設定</button>
-      <button class="sidebar-btn" data-panel="page">🗂 ページ編集</button>
     </aside>
 
     <!-- メインコンテンツ -->
     <main class="admin-content">
 
-      <!-- テキスト編集パネル -->
-      <div id="panel-text" class="panel active">
-        <h1>テキスト編集</h1>
-
-        <div class="edit-group">
-          <label>サイト名</label>
-          <input type="text" id="txt-site-name" placeholder="MyApp" />
+      <!-- ページ編集パネル -->
+      <div id="panel-page" class="panel active">
+        <h1>ページ編集 — トップページ</h1>
+      
+        <div class="edit-group" style="display:flex;gap:.5rem;flex-wrap:wrap;">
+          <span style="font-size:.85rem;font-weight:600;color:var(--muted);width:100%;">ブロックを追加</span>
+          <button onclick="addBlock('hero')"    class="btn btn-outline">🦸 ヒーロー</button>
+          <button onclick="addBlock('text')"    class="btn btn-outline">📝 テキスト</button>
+          <button onclick="addBlock('image')"   class="btn btn-outline">🖼 画像</button>
+          <button onclick="addBlock('button')"  class="btn btn-outline">🔘 ボタン</button>
+          <button onclick="addBlock('two-col')" class="btn btn-outline">⬛⬛ 2カラム</button>
         </div>
-
-        <div class="edit-group">
-          <label>トップページ — キャッチコピー（h1）</label>
-          <input type="text" id="txt-hero-title" placeholder="ようこそ MyApp へ" />
-        </div>
-
-        <div class="edit-group">
-          <label>トップページ — サブテキスト</label>
-          <textarea id="txt-hero-sub" placeholder="ログインすると会員専用コンテンツにアクセスできます。"></textarea>
-        </div>
-
-        <div class="edit-group">
-          <label>CTAボタンのテキスト</label>
-          <input type="text" id="txt-cta" placeholder="無料で始める" />
-        </div>
-
-        <div class="preview-box">
-          <h3>プレビュー</h3>
-          <div style="text-align:center;padding:1rem;">
-            <p id="prev-title" style="font-size:1.5rem;font-weight:800;"></p>
-            <p id="prev-sub" style="color:var(--muted);margin:.5rem 0;"></p>
-            <span id="prev-cta" class="btn btn-primary btn-lg" style="display:inline-flex;"></span>
-          </div>
-        </div>
+      
+        <div id="block-list"></div>
+      
+        <button id="save-page-btn" onclick="savePage()" class="btn btn-primary btn-block"
+                style="margin-top:1rem;">ページを保存</button>
       </div>
+
 
       <!-- デザイン設定パネル -->
       <div id="panel-design" class="panel">
@@ -304,26 +289,7 @@
           </div>
         </div>
       </div>
-
-      <!-- ページ編集パネル -->
-      <div id="panel-page" class="panel">
-        <h1>ページ編集 — トップページ</h1>
       
-        <div class="edit-group" style="display:flex;gap:.5rem;flex-wrap:wrap;">
-          <span style="font-size:.85rem;font-weight:600;color:var(--muted);width:100%;">ブロックを追加</span>
-          <button onclick="addBlock('hero')"    class="btn btn-outline">🦸 ヒーロー</button>
-          <button onclick="addBlock('text')"    class="btn btn-outline">📝 テキスト</button>
-          <button onclick="addBlock('image')"   class="btn btn-outline">🖼 画像</button>
-          <button onclick="addBlock('button')"  class="btn btn-outline">🔘 ボタン</button>
-          <button onclick="addBlock('two-col')" class="btn btn-outline">⬛⬛ 2カラム</button>
-        </div>
-      
-        <div id="block-list"></div>
-      
-        <button id="save-page-btn" onclick="savePage()" class="btn btn-primary btn-block"
-                style="margin-top:1rem;">ページを保存</button>
-      </div>
-
     </main>
   </div>
 
@@ -358,16 +324,6 @@ document.querySelectorAll('.sidebar-btn').forEach(btn => {
     document.getElementById('panel-' + btn.dataset.panel).classList.add('active');
   });
 });
-
-// ── テキストプレビュー ────────────────────────────────────────────────────
-['txt-hero-title','txt-hero-sub','txt-cta'].forEach(id => {
-  document.getElementById(id).addEventListener('input', updateTextPreview);
-});
-function updateTextPreview() {
-  document.getElementById('prev-title').textContent = document.getElementById('txt-hero-title').value || 'キャッチコピー';
-  document.getElementById('prev-sub').textContent   = document.getElementById('txt-hero-sub').value  || 'サブテキスト';
-  document.getElementById('prev-cta').textContent   = document.getElementById('txt-cta').value       || 'CTAボタン';
-}
 
 // ── カラーピッカー同期 ────────────────────────────────────────────────────
 function syncColor(pickerId, hexId, cssVar) {
