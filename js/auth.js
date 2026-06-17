@@ -99,6 +99,35 @@ async function requireAdmin() {
   return user;
 }
 
+/** ロールの数値レベルを返す */
+function roleLevel(role) {
+  return { guest:0, free:1, standard:2, premium:3, admin:4 }[role] ?? 0;
+}
+
+/** 現在のユーザーのロールを返す（未ログインは 'guest'）*/
+async function getCurrentRole() {
+  const sb = await waitForClient();
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user) return 'guest';
+  const { data } = await sb
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single();
+  return data?.role ?? 'free';
+}
+
+/** 必要ロールを満たしているか確認。満たしていなければリダイレクト */
+async function requireRole(minRole) {
+  const current = await getCurrentRole();
+  if (roleLevel(current) < roleLevel(minRole)) {
+    window.location.href = roleLevel(current) === 0
+      ? '../pages/login.html'
+      : '../pages/upgrade.html';
+    return new Promise(() => {});
+  }
+  return current;
+}
 /**
  * ログイン後のリダイレクト先をロールで振り分ける。
  * login.html / signup.html から呼ぶ。
