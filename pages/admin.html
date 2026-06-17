@@ -726,8 +726,8 @@ async function loadPagesManager() {
   const sb = await waitForClient();
   const { data } = await sb
     .from('site_pages')
-    .select('id, slug, title, parent_id, sort_order, is_members_only')
-    .order('sort_order');
+    .select('id, slug, title, parent_id, sort_order')
+    .order('sort_order');F
   sitePages = data ?? [];
 
   // page.html から遷移してきた場合は該当ページを開く
@@ -778,12 +778,6 @@ function renderPagesManager() {
               `<option value="${op.id}" ${p.parent_id===op.id?'selected':''}>${esc2(op.title)}</option>`
             ).join('')}
           </select>
-        </div>
-        <div class="edit-group" style="display:flex;align-items:center;gap:.75rem;">
-          <input type="checkbox" id="members-${p.id}"
-                 ${p.is_members_only?'checked':''}
-                 onchange="updatePage('${p.id}','is_members_only',this.checked)" />
-          <label for="members-${p.id}" style="margin:0;color:var(--text);">会員限定ページ</label>
         </div>
         <div class="edit-group">
         <label>閲覧に必要なロール</label>
