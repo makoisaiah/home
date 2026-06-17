@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>プランのご案内 | MyApp</title>
+  <link rel="stylesheet" href="../css/style.css" />
+  <style id="dynamic-vars"></style>
+  <style>
+    .plans {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.5rem;
+      margin: 2rem 0;
+    }
+    .plan-card {
+      border: 1.5px solid var(--border);
+      border-radius: calc(var(--radius) * 1.5);
+      padding: 1.5rem;
+      text-align: center;
+      background: var(--bg);
+    }
+    .plan-card.current {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 15%, transparent);
+    }
+    .plan-name { font-size: 1.2rem; font-weight: 700; margin-bottom: .5rem; }
+    .plan-badge {
+      display: inline-block;
+      font-size: .75rem;
+      font-weight: 700;
+      padding: .2rem .6rem;
+      border-radius: 99px;
+      background: var(--primary);
+      color: #fff;
+      margin-bottom: .75rem;
+    }
+    .plan-desc { color: var(--muted); font-size: .875rem; }
+  </style>
+</head>
+<body class="auth-page">
+  <div style="width:100%;max-width:800px;padding:2rem;">
+    <a href="../index.html" class="logo" style="display:block;text-align:center;margin-bottom:1.5rem;">MyApp</a>
+    <h1 style="text-align:center;margin-bottom:.5rem;">プランのご案内</h1>
+    <p style="text-align:center;color:var(--muted);margin-bottom:2rem;">
+      このページを閲覧するには上位プランへのアップグレードが必要です。
+    </p>
+
+    <div class="plans">
+      <div class="plan-card" id="plan-free">
+        <div class="plan-name">Free</div>
+        <p class="plan-desc">基本的なコンテンツを閲覧できます。</p>
+      </div>
+      <div class="plan-card" id="plan-standard">
+        <div class="plan-name">Standard</div>
+        <p class="plan-desc">標準コンテンツとファイルにアクセスできます。</p>
+      </div>
+      <div class="plan-card" id="plan-premium">
+        <div class="plan-name">Premium</div>
+        <p class="plan-desc">すべてのコンテンツとファイルにアクセスできます。</p>
+      </div>
+    </div>
+
+    <p style="text-align:center;color:var(--muted);font-size:.875rem;">
+      プランの変更はお問い合わせください。
+    </p>
+    <div style="text-align:center;margin-top:1.5rem;">
+      <a href="../index.html" class="btn btn-outline">トップへ戻る</a>
+    </div>
+  </div>
+
+  <script src="../js/auth.js"></script>
+  <script>
+  async function init() {
+    const sb = await waitForClient();
+    const cached = localStorage.getItem('designCache');
+    if (cached) document.getElementById('dynamic-vars').textContent = cached;
+
+    const userRole = await getCurrentRole();
+    const current = document.getElementById('plan-' + userRole);
+    if (current) {
+      current.classList.add('current');
+      current.innerHTML += '<div class="plan-badge">現在のプラン</div>';
+    }
+  }
+  init();
+  </script>
+</body>
+</html>
