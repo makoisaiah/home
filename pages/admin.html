@@ -652,27 +652,6 @@ async function uploadImage(event, i) {
   setTimeout(() => toast.classList.remove('show'), 2500);
 }
 
-async function savePage() {
-  const sb  = await waitForClient();
-  const btn = document.getElementById('save-page-btn');
-  btn.disabled = true;
-  btn.textContent = '保存中…';
-
-  const { error } = await sb.from('pages').upsert(
-    { id:'index', blocks, updated_at: new Date().toISOString() },
-    { onConflict:'id' }
-  );
-
-  btn.disabled = false;
-  btn.textContent = 'ページを保存';
-
-  const toast = document.getElementById('toast');
-  toast.textContent  = error ? '保存失敗: '+error.message : 'ページを保存しました ✓';
-  toast.style.background = error ? '#e53e3e' : '#1a202c';
-  toast.classList.add('show');
-  setTimeout(() => toast.classList.remove('show'), 2500);
-}
-
 function switchColType(i, newType) {
   blocks[i].type = newType;
   if (newType === 'three-col' && !blocks[i].center) blocks[i].center = [];
