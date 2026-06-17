@@ -555,7 +555,9 @@ function renderFields(b, i, colParent, colKey, colIndex) {
     case 'three-col': {
       const cols   = b.type === 'three-col' ? 3 : 2;
       const labels = ['左', '中', '右'];
-      const keys   = ['left', 'center', 'right'].slice(0, cols);
+      const keys = block.type === 'three-col'
+        ? ['left', 'center', 'right']
+        : ['left', 'right'];
 
       const switchBtn = b.type === 'two-col'
         ? `<button class="btn btn-outline" style="font-size:.8rem;padding:.25rem .6rem;"
