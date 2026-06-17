@@ -7,39 +7,29 @@
 async function initNav() {
   const sb = await waitForClient();
 
-  // ページ一覧を取得
   const { data: pages } = await sb
     .from('site_pages')
-    .select('id, slug, title, parent_id, sort_order, is_members_only')
+    .select('id, slug, title, parent_id, sort_order, is_members_only, min_role')
     .order('sort_order');
 
-  // ログイン状態を確認
-  const { data: { user } } = await sb.auth.getUser();
+  const userRole = await getCurrentRole();  // ← 変更
 
-  // ハンバーガーボタンをヘッダーに追加
   const header = document.querySelector('.site-header nav');
   const burgerBtn = document.createElement('button');
   burgerBtn.id = 'burger-btn';
   burgerBtn.setAttribute('aria-label', 'メニューを開く');
-  burgerBtn.innerHTML = `
-    <span></span>
-    <span></span>
-    <span></span>
-  `;
+  burgerBtn.innerHTML = `<span></span><span></span><span></span>`;
   header.prepend(burgerBtn);
 
-  // ドロワーを body に追加
   const drawer = document.createElement('div');
   drawer.id = 'nav-drawer';
-  drawer.innerHTML = buildNavHTML(pages, user);
+  drawer.innerHTML = buildNavHTML(pages, userRole);  // ← 変更
   document.body.appendChild(drawer);
 
-  // オーバーレイを追加
   const overlay = document.createElement('div');
   overlay.id = 'nav-overlay';
   document.body.appendChild(overlay);
 
-  // 開閉トグル
   burgerBtn.addEventListener('click', () => toggleNav(true));
   overlay.addEventListener('click', () => toggleNav(false));
 
@@ -51,13 +41,10 @@ function toggleNav(open) {
   document.getElementById('nav-overlay').classList.toggle('open', open);
   document.getElementById('burger-btn').classList.toggle('open', open);
 }
-
-function buildNavHTML(pages, user) {
+function buildNavHTML(pages, userRole) {
   if (!pages || pages.length === 0) {
     return '<p class="nav-empty">ページがまだありません</p>';
   }
-
-  // ツリー構造に変換
   const map = {};
   const roots = [];
   pages.forEach(p => { map[p.id] = { ...p, children: [] }; });
@@ -68,19 +55,24 @@ function buildNavHTML(pages, user) {
       roots.push(map[p.id]);
     }
   });
-
-  return '<nav class="nav-tree">' + renderNavItems(roots, user, 0) + '</nav>';
+  return '<nav class="nav-tree">' + renderNavItems(roots, userRole, 0) + '</nav>';
 }
 
-function renderNavItems(items, user, depth) {
+function renderNavItems(items, userRole, depth) {
   return items.map(page => {
-    const locked = page.is_members_only && !user;
-    const indent = depth * 1.25;
-    const href   = getPageUrl(page.slug);
+    const required = page.min_role ?? 'guest';
+    const locked   = roleLevel(userRole) < roleLevel(required);
+    const indent   = depth * 1.25;
+    const href     = getPageUrl(page.slug);
+
+    let lockLabel = '';
+    if (locked) {
+      lockLabel = userRole === 'guest' ? '🔒' : `🔒 ${required}`;
+    }
 
     const link = locked
       ? `<span class="nav-item nav-locked" style="padding-left:${indent + 1}rem;">
-           🔒 ${escNav(page.title)}
+           ${lockLabel} ${escNav(page.title)}
          </span>`
       : `<a class="nav-item" href="${href}" style="padding-left:${indent + 1}rem;">
            ${depth > 0 ? '<span class="nav-indent">└</span>' : ''}
@@ -88,7 +80,7 @@ function renderNavItems(items, user, depth) {
          </a>`;
 
     const children = page.children.length > 0
-      ? renderNavItems(page.children, user, depth + 1)
+      ? renderNavItems(page.children, userRole, depth + 1)
       : '';
 
     return `<div class="nav-group">${link}${children}</div>`;
