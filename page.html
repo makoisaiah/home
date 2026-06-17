@@ -94,6 +94,25 @@
 
     document.title = pageData.title + ' | ' + (document.getElementById('site-name').textContent);
     document.getElementById('page').innerHTML = renderBlocks(pageData.blocks);
+
+    // 管理者なら編集ボタンを表示
+    if (user) {
+      const { data: profile } = await sb
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+    
+      if (profile?.role === 'admin') {
+        const editBar = document.createElement('div');
+        editBar.style.cssText = 'position:fixed;bottom:1.5rem;right:1.5rem;z-index:100;';
+        editBar.innerHTML = `
+          <a href="pages/admin.html" onclick="sessionStorage.setItem('editPageId','${pageData.id}');sessionStorage.setItem('editPageTitle','${escNav(pageData.title)}')"
+             class="btn btn-primary">✏️ このページを編集</a>
+        `;
+        document.body.appendChild(editBar);
+      }
+    }
   }
 
   function showError(msg) {
