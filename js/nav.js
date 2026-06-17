@@ -9,7 +9,7 @@ async function initNav() {
 
   const { data: pages } = await sb
     .from('site_pages')
-    .select('id, slug, title, parent_id, sort_order, is_members_only, min_role')
+    .select('id, slug, title, parent_id, sort_order, min_role')
     .order('sort_order');
 
   const userRole = await getCurrentRole();  // ← 変更
