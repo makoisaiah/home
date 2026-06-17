@@ -772,6 +772,15 @@ function renderPagesManager() {
                  onchange="updatePage('${p.id}','is_members_only',this.checked)" />
           <label for="members-${p.id}" style="margin:0;color:var(--text);">会員限定ページ</label>
         </div>
+        <div class="edit-group">
+        <label>閲覧に必要なロール</label>
+          <select onchange="updatePage('${p.id}','min_role',this.value)">
+            <option value="guest"    ${p.min_role==='guest'   ?'selected':''}>全員（guest）</option>
+            <option value="free"     ${p.min_role==='free'    ?'selected':''}>free 以上</option>
+            <option value="standard" ${p.min_role==='standard'?'selected':''}>standard 以上</option>
+            <option value="premium"  ${p.min_role==='premium' ?'selected':''}>premium 以上</option>
+          </select>
+        </div>
       </div>
     </div>
   `).join('');
