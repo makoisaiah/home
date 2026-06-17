@@ -371,7 +371,6 @@ async function loadSettings() {
                     document.getElementById('color-bg-hex').value      = s.bg; }
   if (s.fontBody)   document.getElementById('font-body').value  = s.fontBody;
   if (s.fontSize)   document.getElementById('font-size').value  = s.fontSize;
-  updateTextPreview();
 }
 
 document.getElementById('save-btn').addEventListener('click', async () => {
@@ -381,10 +380,6 @@ document.getElementById('save-btn').addEventListener('click', async () => {
   saveBtn.textContent = '保存中…';
 
   const settings = {
-    siteName:  document.getElementById('txt-site-name').value,
-    heroTitle: document.getElementById('txt-hero-title').value,
-    heroSub:   document.getElementById('txt-hero-sub').value,
-    cta:       document.getElementById('txt-cta').value,
     primary:   document.getElementById('color-primary').value,
     bg:        document.getElementById('color-bg').value,
     fontBody:  document.getElementById('font-body').value,
