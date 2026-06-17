@@ -737,6 +737,15 @@ async function loadPagesManager() {
     .select('id, slug, title, parent_id, sort_order, is_members_only')
     .order('sort_order');
   sitePages = data ?? [];
+
+  // page.html から遷移してきた場合は該当ページを開く
+  const editId    = sessionStorage.getItem('editPageId');
+  const editTitle = sessionStorage.getItem('editPageTitle');
+  if (editId) {
+    sessionStorage.removeItem('editPageId');
+    sessionStorage.removeItem('editPageTitle');
+    editPageBlocks(editId, editTitle);
+  }
   renderPagesManager();
 }
 
