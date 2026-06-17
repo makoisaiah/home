@@ -555,7 +555,7 @@ function renderFields(b, i, colParent, colKey, colIndex) {
     case 'three-col': {
       const cols   = b.type === 'three-col' ? 3 : 2;
       const labels = ['左', '中', '右'];
-      const keys = block.type === 'three-col'
+      const keys = b.type === 'three-col'
         ? ['left', 'center', 'right']
         : ['left', 'right'];
 
