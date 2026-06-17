@@ -217,6 +217,7 @@
       <h2>管理メニュー</h2>
       <button class="sidebar-btn active" data-panel="page">🗂 ページ編集</button>
       <button class="sidebar-btn" data-panel="design">🎨 デザイン設定</button>
+      <button class="sidebar-btn" data-panel="pages">🗂 ページ管理</button>
     </aside>
 
     <!-- メインコンテンツ -->
@@ -289,6 +290,19 @@
           </div>
         </div>
       </div>
+
+      <!-- ページ管理パネル -->
+      <div id="panel-pages" class="panel">
+        <h1>ページ管理</h1>
+      
+        <div class="edit-group" style="display:flex;gap:.5rem;align-items:center;">
+          <input type="text" id="new-page-title" placeholder="ページ名" style="flex:1;" />
+          <input type="text" id="new-page-slug"  placeholder="slug（例: about）" style="flex:1;" />
+          <button onclick="addPage()" class="btn btn-primary" style="white-space:nowrap;">追加</button>
+        </div>
+      
+        <div id="pages-list"></div>
+      </div>
       
     </main>
   </div>
@@ -308,6 +322,7 @@ requireAdmin().then(user => {
   document.getElementById('page').style.display = '';
   loadSettings();
   loadPageEditor(); 
+  loadPagesManager(); 
 });
 
 document.getElementById('logout-btn').addEventListener('click', async () => {
@@ -707,6 +722,149 @@ async function uploadImageToCol(event, i, key, ci) {
   const toast = document.getElementById('toast');
   toast.textContent = 'アップロード完了 ✓';
   toast.style.background = '#1a202c';
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2500);
+}
+
+// ── ページ管理 ────────────────────────────────────────────────────────────
+
+let sitePages = [];
+
+async function loadPagesManager() {
+  const sb = await waitForClient();
+  const { data } = await sb
+    .from('site_pages')
+    .select('id, slug, title, parent_id, sort_order, is_members_only')
+    .order('sort_order');
+  sitePages = data ?? [];
+  renderPagesManager();
+}
+
+function renderPagesManager() {
+  const container = document.getElementById('pages-list');
+  if (!container) return;
+
+  if (sitePages.length === 0) {
+    container.innerHTML = '<p style="color:var(--muted);padding:1rem 0;">ページがまだありません</p>';
+    return;
+  }
+
+  container.innerHTML = sitePages.map(p => `
+    <div class="block-item">
+      <div class="block-header">
+        <span class="block-label">${esc2(p.title)}</span>
+        <div class="block-actions">
+          <button onclick="editPageBlocks('${p.id}','${esc2(p.title)}')" class="btn btn-outline" style="font-size:.8rem;">ブロック編集</button>
+          <button onclick="deletePage('${p.id}')" class="btn-danger">削除</button>
+        </div>
+      </div>
+      <div class="block-fields" style="gap:.75rem;">
+        <div class="edit-group">
+          <label>ページ名</label>
+          <input type="text" value="${esc2(p.title)}"
+                 onchange="updatePage('${p.id}','title',this.value)" />
+        </div>
+        <div class="edit-group">
+          <label>slug（URL）</label>
+          <input type="text" value="${esc2(p.slug)}"
+                 onchange="updatePage('${p.id}','slug',this.value)" />
+        </div>
+        <div class="edit-group">
+          <label>親ページ</label>
+          <select onchange="updatePage('${p.id}','parent_id',this.value)">
+            <option value="">なし（トップレベル）</option>
+            ${sitePages.filter(op => op.id !== p.id).map(op =>
+              `<option value="${op.id}" ${p.parent_id===op.id?'selected':''}>${esc2(op.title)}</option>`
+            ).join('')}
+          </select>
+        </div>
+        <div class="edit-group" style="display:flex;align-items:center;gap:.75rem;">
+          <input type="checkbox" id="members-${p.id}"
+                 ${p.is_members_only?'checked':''}
+                 onchange="updatePage('${p.id}','is_members_only',this.checked)" />
+          <label for="members-${p.id}" style="margin:0;color:var(--text);">会員限定ページ</label>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function addPage() {
+  const title = document.getElementById('new-page-title').value.trim();
+  const slug  = document.getElementById('new-page-slug').value.trim();
+  if (!title || !slug) { alert('ページ名とslugを入力してください'); return; }
+
+  const sb = await waitForClient();
+  const { error } = await sb.from('site_pages').insert({
+    title, slug, sort_order: sitePages.length, blocks: []
+  });
+  if (error) { alert('追加失敗: ' + error.message); return; }
+
+  document.getElementById('new-page-title').value = '';
+  document.getElementById('new-page-slug').value  = '';
+  await loadPagesManager();
+}
+
+async function updatePage(id, field, value) {
+  const sb = await waitForClient();
+  await sb.from('site_pages').update({ [field]: value }).eq('id', id);
+  const page = sitePages.find(p => p.id === id);
+  if (page) page[field] = value;
+  renderPagesManager();
+}
+
+async function deletePage(id) {
+  if (!confirm('このページを削除しますか？')) return;
+  const sb = await waitForClient();
+  await sb.from('site_pages').delete().eq('id', id);
+  await loadPagesManager();
+}
+
+function editPageBlocks(id, title) {
+  // ページ編集パネルに切り替えて該当ページを読み込む
+  document.querySelectorAll('.sidebar-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelector('[data-panel="page"]').classList.add('active');
+  document.getElementById('panel-page').classList.add('active');
+  loadPageById(id, title);
+}
+
+let currentPageId = 'index';
+
+async function loadPageById(id, title) {
+  const sb = await waitForClient();
+  const { data } = await sb.from('site_pages').select('blocks').eq('id', id).single();
+  currentPageId = id;
+  document.querySelector('#panel-page h1').textContent = 'ページ編集 — ' + title;
+  blocks = data?.blocks ?? [];
+  renderEditor();
+}
+
+async function savePage() {
+  const sb  = await waitForClient();
+  const btn = document.getElementById('save-page-btn');
+  btn.disabled = true;
+  btn.textContent = '保存中…';
+
+  // index か site_pages かを判断して保存先を変える
+  let error;
+  if (currentPageId === 'index') {
+    ({ error } = await sb.from('pages').upsert(
+      { id:'index', blocks, updated_at: new Date().toISOString() },
+      { onConflict:'id' }
+    ));
+  } else {
+    ({ error } = await sb.from('site_pages')
+      .update({ blocks, updated_at: new Date().toISOString() })
+      .eq('id', currentPageId));
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'ページを保存';
+
+  const toast = document.getElementById('toast');
+  toast.textContent  = error ? '保存失敗: '+error.message : 'ページを保存しました ✓';
+  toast.style.background = error ? '#e53e3e' : '#1a202c';
   toast.classList.add('show');
   setTimeout(() => toast.classList.remove('show'), 2500);
 }
