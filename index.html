@@ -32,7 +32,7 @@
 <body>
   <header class="site-header">
     <a href="/" class="logo" id="site-name">MyApp</a>
-    <nav>
+    <nav id="header-nav">
       <a href="pages/login.html" class="btn btn-outline">ログイン</a>
       <a href="pages/signup.html" class="btn btn-primary">新規登録</a>
     </nav>
@@ -76,6 +76,9 @@
       localStorage.setItem('designCache', vars); 
       }
 
+    // ヘッダーのログイン状態を更新
+    await updateHeaderNav(sb);
+
     // ページブロックを取得して描画
     const { data: page } = await sb
       .from('pages')
@@ -94,6 +97,30 @@
         sub: 'ログインすると会員専用コンテンツにアクセスできます。',
         cta: '無料で始める', ctaUrl: 'pages/signup.html' }
     ];
+  }
+
+  async function updateHeaderNav(sb) {
+    const { data: { user } } = await sb.auth.getUser();
+    const nav = document.getElementById('header-nav');
+    if (!user) return;
+  
+    const { data: profile } = await sb
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+  
+    const isAdmin = profile?.role === 'admin';
+    nav.innerHTML = `
+      <span class="user-email">${user.email}</span>
+      ${isAdmin ? '<a href="pages/admin.html" class="btn btn-outline">管理画面</a>' : ''}
+      <button onclick="handleLogout()" class="btn btn-outline">ログアウト</button>
+    `;
+  }
+  
+  async function handleLogout() {
+    await signOut();
+    window.location.reload();
   }
 
   init();
