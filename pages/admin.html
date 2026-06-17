@@ -529,9 +529,34 @@ function renderFields(b, i, colParent, colKey, colIndex) {
       const uploadHandler = colParent !== undefined
         ? `uploadImageToCol(event,${colParent},'${colKey}',${colIndex})`
         : `uploadImage(event,${i})`;
-      return `<div class="edit-group"><label>画像</label>
-                <input type="file" accept="image/*" onchange="${uploadHandler}"/>
-              </div>`
+    
+      const fileName = b.url
+        ? b.url.split('/').pop().replace(/^\d+_/, '')
+        : null;
+    
+      const fileField = b.url
+        ? `<div class="edit-group">
+             <label>画像</label>
+             <div style="display:flex;align-items:center;gap:.75rem;">
+               <span style="font-size:.875rem;color:var(--text);
+                            background:var(--surface);padding:.4rem .75rem;
+                            border-radius:var(--radius);border:1px solid var(--border);
+                            flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                 📎 ${esc2(fileName)}
+               </span>
+               <label class="btn btn-outline" style="cursor:pointer;white-space:nowrap;">
+                 変更
+                 <input type="file" accept="image/*" onchange="${uploadHandler}"
+                        style="display:none;"/>
+               </label>
+             </div>
+           </div>`
+        : `<div class="edit-group">
+             <label>画像</label>
+             <input type="file" accept="image/*" onchange="${uploadHandler}"/>
+           </div>`;
+    
+      return fileField
            + field('ALTテキスト','alt')
            + field('キャプション（省略可）','caption')
            + field('リンクURL（省略可）','link')
