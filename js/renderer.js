@@ -21,15 +21,24 @@ function renderBlock(block) {
           ${block.heading ? `<h2>${esc(block.heading)}</h2>` : ''}
           <p style="white-space:pre-wrap;">${esc(block.body)}</p>
         </section>`;
-
-    case 'image':
+    
+    case 'image': {
+      const img = `
+        <img src="${esc(block.url)}" alt="${esc(block.alt)}"
+             style="max-width:100%;border-radius:var(--radius);display:block;
+                    transition:transform .2s, box-shadow .2s, opacity .15s;" />
+        ${block.caption ? `<p style="color:var(--muted);font-size:.875rem;margin-top:.5rem;">${esc(block.caption)}</p>` : ''}`;
+    
+      const inner = block.link
+        ? `<a href="${esc(block.link)}" class="img-link">${img}</a>`
+        : img;
+    
       return `
         <section class="container" style="text-align:${block.align||'center'}">
-          <img src="${esc(block.url)}" alt="${esc(block.alt)}"
-               style="max-width:100%;border-radius:var(--radius);" />
-          ${block.caption ? `<p style="color:var(--muted);font-size:.875rem;margin-top:.5rem;">${esc(block.caption)}</p>` : ''}
+          ${inner}
         </section>`;
-
+    }
+  
     case 'button':
       return `
         <section class="container" style="text-align:${block.align||'center'}">
