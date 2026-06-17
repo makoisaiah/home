@@ -39,13 +39,18 @@ function renderBlock(block) {
         </section>`;
 
     case 'two-col':
+    case 'three-col': {
+      const cols = block.type === 'three-col'
+        ? [block.left ?? [], block.center ?? [], block.right ?? []]
+        : [block.left ?? [], block.right ?? []];
+      const gridCols = block.type === 'three-col' ? '1fr 1fr 1fr' : '1fr 1fr';
       return `
         <section class="container">
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:2rem;align-items:start;">
-            <div>${renderBlocks(block.left)}</div>
-            <div>${renderBlocks(block.right)}</div>
+          <div style="display:grid;grid-template-columns:${gridCols};gap:2rem;align-items:start;">
+            ${cols.map(col => `<div>${renderBlocks(col)}</div>`).join('')}
           </div>
         </section>`;
+    }
 
     default:
       return '';
