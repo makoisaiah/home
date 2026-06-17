@@ -80,15 +80,20 @@
 
     const { data: pageData } = await sb
       .from('site_pages')
-      .select('id, title, blocks, is_members_only')
+      .select('id, title, blocks, is_members_only, min_role')
       .eq('slug', slug)
       .single();
 
     if (!pageData) { showError('ページが見つかりません'); return; }
 
-    // 会員限定ページのアクセス制御
-    if (pageData.is_members_only && !user) {
-      showError('このページは会員限定です。ログインしてください。');
+    // ロールチェック
+    const userRole = await getCurrentRole();
+    if (roleLevel(userRole) < roleLevel(pageData.min_role ?? 'guest')) {
+      if (userRole === 'guest') {
+        showError('このページはログインが必要です。', true);
+      } else {
+        showError('このページを閲覧するには上位プランへのアップグレードが必要です。', false);
+      }
       return;
     }
 
@@ -115,11 +120,15 @@
     }
   }
 
-  function showError(msg) {
+  function showError(msg, showLogin = false) {
     document.getElementById('page').innerHTML =
       `<div class="container" style="padding:4rem 1.5rem;text-align:center;">
          <p style="color:var(--muted);font-size:1.1rem;">${msg}</p>
-         <a href="index.html" class="btn btn-primary" style="margin-top:1.5rem;">トップへ戻る</a>
+         <div style="display:flex;gap:1rem;justify-content:center;margin-top:1.5rem;">
+           <a href="index.html" class="btn btn-outline">トップへ戻る</a>
+           ${showLogin ? '<a href="pages/login.html" class="btn btn-primary">ログイン</a>' : ''}
+           ${!showLogin ? '<a href="pages/upgrade.html" class="btn btn-primary">プランを確認する</a>' : ''}
+         </div>
        </div>`;
   }
 
