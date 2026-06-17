@@ -80,7 +80,7 @@
 
     const { data: pageData } = await sb
       .from('site_pages')
-      .select('title, blocks, is_members_only')
+      .select('id, title, blocks, is_members_only')
       .eq('slug', slug)
       .single();
 
