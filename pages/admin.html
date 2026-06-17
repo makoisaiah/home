@@ -294,7 +294,7 @@
   </div>
 
   <!-- 保存バー -->
-  <div class="save-bar">
+  <div class="save-bar" style="display:none;">
     <span id="toast" class="toast">保存しました ✓</span>
     <button id="save-btn" class="btn btn-primary">変更を保存</button>
   </div>
@@ -322,6 +322,10 @@ document.querySelectorAll('.sidebar-btn').forEach(btn => {
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById('panel-' + btn.dataset.panel).classList.add('active');
+
+     // デザイン設定パネルのときだけ「変更を保存」を表示
+    document.querySelector('.save-bar').style.display =
+      btn.dataset.panel === 'design' ? 'flex' : 'none';
   });
 });
 
