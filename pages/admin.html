@@ -12,7 +12,7 @@
       min-height: calc(100vh - 60px);
     }
     .admin-sidebar {
-      border-right: 1px solid var(--border);
+      border-right: 1px solid var(--border);k
       padding: 1.5rem 1rem;
       display: flex;
       flex-direction: column;
@@ -436,6 +436,7 @@ const BLOCK_TYPES = {
   hero:    '🦸 ヒーロー',
   text:    '📝 テキスト',
   image:   '🖼 画像',
+  file:       '📄 ファイル',  
   button:  '🔘 ボタン',
   'two-col': '⬛⬛ 2カラム',
   'three-col':'⬛⬛⬛ 3カラム',
@@ -537,6 +538,17 @@ function renderFields(b, i, colParent, colKey, colIndex) {
                   <option value="right"  ${b.align==='right' ?'selected':''}>右</option>
                 </select></div>`;
     }
+    
+    case 'file':
+      return field('ファイル名（表示用）','label')
+           + field('説明（省略可）','desc')
+           + field('Supabase Storage のパス','path')
+           + `<div class="edit-group"><label>必要なロール</label>
+                <select onchange="${onInput('minRole')}">
+                  <option value="free"     ${b.minRole==='free'    ?'selected':''}>free 以上</option>
+                  <option value="standard" ${b.minRole==='standard'?'selected':''}>standard 以上</option>
+                  <option value="premium"  ${b.minRole==='premium' ?'selected':''}>premium 以上</option>
+                </select></div>`;
 
     case 'button':
       return field('ボタンテキスト','label') + field('URL','url')
@@ -624,6 +636,7 @@ function addBlock(type) {
     hero:    { type:'hero', title:'', sub:'', cta:'', ctaUrl:'' },
     text:    { type:'text', heading:'', body:'' },
     image:   { type:'image', url:'', alt:'', caption:'', align:'center' },
+    file: { type:'file', label:'', desc:'', path:'', minRole:'free', align:'left' },
     button:  { type:'button', label:'', url:'', style:'primary' },
     'two-col': { type:'two-col', left:[], right:[] },
   };
