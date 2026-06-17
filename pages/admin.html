@@ -534,6 +534,7 @@ function renderFields(b, i, colParent, colKey, colIndex) {
               </div>`
            + field('ALTテキスト','alt')
            + field('キャプション（省略可）','caption')
+           + field('リンクURL（省略可）','link')
            + `<div class="edit-group"><label>配置</label>
                 <select onchange="${onInput('align')}">
                   <option value="center" ${b.align==='center'?'selected':''}>中央</option>
