@@ -5,6 +5,28 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>MyApp</title>
   <link rel="stylesheet" href="css/style.css" />
+  <style>
+    #page { }
+    .img-link {
+      display: inline-block;
+      cursor: pointer;
+      text-decoration: none;
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .img-link img {
+      transition: transform .2s, box-shadow .2s;
+    }
+    .img-link:hover img {
+      transform: scale(1.03);
+      box-shadow: 0 8px 24px rgba(0,0,0,.15);
+    }
+    .img-link:active img {
+      transform: scale(0.97);
+      box-shadow: 0 2px 8px rgba(0,0,0,.1);
+      opacity: .85;
+    }
+  </style>
   <style id="dynamic-vars"></style>
 </head>
 <body>
